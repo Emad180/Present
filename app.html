@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="images/favicon.png">
+	<title>Present | Coaching App</title>
+	<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+	<link rel="stylesheet" href="css/app.css">
+</head>
+
+<body>
+
+	<!-- HEADER -->
+	<header class="top-nav">
+		<div class="brand">Present</div>
+	</header>
+
+	<!-- MAIN APP CONTAINER -->
+	<div class="app-container">
+		<div class="app-content">
+
+			<!-- LEFT PANEL: Slides -->
+			<div class="left-panel">
+				<div class="slides-placeholder" id="slides-container">
+					<canvas id="pdf-canvas"></canvas>
+					<p> Click here to upload your presentation </p>
+					<button id="up-arrow" class="arrow top-right">↑</button>
+					<button id="down-arrow" class="arrow bottom-right">↓</button>
+					<button id="audience-btn" class="arrow top-left"> Audience 👥</button>
+				</div>
+			</div>
+
+			<!-- RIGHT PANEL: Avatar & Camera -->
+			<div class="right-panel">
+				<!-- AVATAR PANEL -->
+				<div class="avatar-panel">
+					<div class="avatar-buttons">
+						<input type="file" id="slide-upload" accept=".pdf,.ppt,.pptx" style="display:none">
+						<button class="btn small" id="upload-button"> Start </button>
+						<button class="btn small" id="start-stop"> Stop </button>
+						<button class="btn small" id="view-feedback">View Feedback</button>
+					</div>
+
+					<div class="avatar-placeholder">
+						<p> Make sure to use the audience button on the top-left corner,
+							to simulate audience view and make engaging presentation. 
+						</p>
+					</div>
+
+					<div class="avatar-audio">
+						<div class="audio-row">
+							<audio id="audio-playback" controls></audio>
+							<span id="recording-timer">0:00</span>
+						</div>
+						<!-- Live oscilloscope -->
+ 						<canvas id="voice-scope" width="600" height="80"></canvas>	
+					</div>
+				</div>
+
+				<!-- CAMERA PANEL -->
+				<div class="camera-panel">
+					<div class="camera-placeholder" id="webcam">
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<footer>
+		<p>© 2025 Present | For Scientists and Engineers</p>
+	</footer>
+
+	<!-- FEEDBACK OVERLAY -->
+	<div id="feedback-overlay">
+		<div class="basic-feedback">
+			<h2>Free feedback</h2>
+			<p> <b>Average volume:</b> <span id="avg-volume">–</span>-</p>
+			<p> <b>Speech time:</b> <span id="speech-time">–</p>
+			<p> <b>Speaking pace:</b> <span id="speaking-pace">–</p>
+			<p> <b>Tone profile:</b> <span id="tone-profile">–</p>
+			<!-- New container for slide timings -->
+			<hr>
+			<div id="slide-timings-summary"> </div>
+		</div>
+
+		<div class="ai-feedback-content">
+			<button id="close-feedback">X</button>
+
+			<h2>Get comprehensive analysis and review</h2>
+
+			<!-- Pricing -->
+			<div class="pricing-box">
+				<div class="pricing-row">
+				<span class="badge">50% OFF today</span>
+				<span class="countdown" id="discount-countdown">--:--:--</span>
+				</div>
+
+				<div class="price">
+				<span class="price-was">Was <span id="price-was">$15.90</span></span>
+				<span class="price-now">Now <span id="price-now">$7.95</span></span>
+				</div>
+
+				<div class="pricing-note">
+				You’ll enter your email during payment — please make sure it’s correct.
+				</div>
+			</div>
+
+			<!-- Name before payment (required) -->
+			<label class="field-label" for="customer-name">Your name (required)</label>
+			<input id="customer-name" type="text" placeholder="e.g., Emad Hasabeldaim">
+
+			<!-- Main action -->
+			<button class="btn primary full" id="request-analysis-btn" style="margin-top: 0.8rem;" title="Record your presentation first.">
+				Get comprehensive analysis and review
+			</button>
+
+			<p id="analysis-warning" class="warn" style="display:none;"></p>
+
+			<!-- What they get -->
+			<div class="benefits">
+				<h3>What you get</h3>
+				<ul>
+					<li>Slide-to-speech alignment: identify mismatches, missing explanations, and technical clarity gaps</li>
+					<li>Actionable improvement plan: what to change on slides + what to say differently</li>
+					<li>Speaking delivery review from your audio (pace, pauses, volume, clarity)</li>
+					<li>Summary of your slide timing (including audience-view time)</li>
+					<li>Manual expert review delivered to your email</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<!-- AUDIENCE OVERLAY -->
+	<div id="audience-overlay">
+		<button id="close-audience">X</button>
+		<video id="audience-video" src="videos/audience-view.mp4" autoplay muted loop></video>
+	</div>
+
+	<script type="module" src="js/app.js"></script>
+
+</body>
+</html>

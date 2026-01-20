@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Present | Scientific Presentation Coaching</title>
+	<link rel="icon" type="image/png" href="images/favicon.png" />
+	<meta name="description"
+		content="Present helps scientists and engineers deliver clear, confident, and engaging presentations through smart AI feedback and coaching tools." />
+	<link rel="stylesheet" href="css/index.css" />
+</head>
+
+<body>
+	<!-- ===== HEADER ===== -->
+	<header class="top-nav">
+		<div class="brand">Present</div>
+		<nav class="links">
+			<a href="#how">How It Works</a>
+			<a href="#features">Features</a>
+			<a href="#about">About</a>
+			<button id="auth-btn" class="btn small">Sign In</button>
+		</nav>
+	</header>
+
+	<!-- ===== HERO ===== -->
+	<section class="hero">
+		<div class="hero-text">
+			<h1>Present with Clarity and Confidence</h1>
+			<p>Coaching for scientists and engineers to communicate complex ideas clearly and effectively.</p>
+			<div class="hero-buttons">
+				<a href="app.html" class="btn primary">Start Free Session</a>
+				<a href="#how" class="btn secondary">Learn More</a>
+			</div>
+		</div>
+		<div class="hero-image">
+			<img src="https://placehold.co/600x400/222/eee?text=Present+App+Preview" alt="App preview">
+		</div>
+	</section>
+
+	<!-- ===== HOW IT WORKS ===== -->
+	<section id="how" class="section">
+		<h2>How It Works</h2>
+		<div class="grid three">
+			<div class="card">
+				<h3>1. Upload or Record</h3>
+				<p>Begin by uploading your slides or recording your talk.</p>
+			</div>
+			<div class="card">
+				<h3>2. Get Feedback</h3>
+				<p>Receive AI-based feedback on clarity, tone, and delivery.</p>
+			</div>
+			<div class="card">
+				<h3>3. Improve and Practice</h3>
+				<p>Refine your slides and speaking skills with guided tips.</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== FEATURES ===== -->
+	<section id="features" class="section">
+		<h2>Key Features</h2>
+		<div class="grid four">
+			<div class="card">
+				<h3>🎤 Voice Feedback</h3>
+				<p>Analyze clarity, tone, and pacing in your narration.</p>
+			</div>
+			<div class="card">
+				<h3>📊 Slide Readability</h3>
+				<p>Check text contrast, density, and visual hierarchy.</p>
+			</div>
+			<div class="card">
+				<h3>🧠 Story Structure</h3>
+				<p>Build logical, engaging narratives for research talks.</p>
+			</div>
+			<div class="card">
+				<h3>🔬 Technical Audience Fit</h3>
+				<p>Ensure your message resonates with scientific audiences.</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== ABOUT ===== -->
+	<section id="about" class="section about">
+		<h2>Why Present?</h2>
+		<p>
+			<strong>Present</strong> is designed to help researchers communicate effectively —
+			whether at conferences, defenses, or technical briefings.
+			It's built with an understanding of how scientists think and speak.
+		</p>
+	</section>
+
+	<!-- ===== CALL TO ACTION ===== -->
+	<section id="cta" class="section cta">
+		<h2>Ready to Present Your Best Work?</h2>
+		<a href="#" class="btn primary large">Start Free Session</a>
+	</section>
+
+	<!-- ===== FOOTER ===== -->
+	<footer>
+		<p>© 2025 Present | For Scientists and Engineers</p>
+	</footer>
+
+	<!-- ===== AUTH MODAL (SIGN IN / SIGN OUT) ===== -->
+	<div id="auth-modal" class="modal">
+		<div class="modal-content">
+			<h2 id="auth-title">Sign In</h2>
+			<input type="email" id="email" placeholder="Email" />
+			<input type="password" id="password" placeholder="Password" />
+			<button id="auth-action" class="btn primary full">Sign In</button>
+			<button id="close-modal" class="btn secondary full">Cancel</button>
+		</div>
+	</div>
+
+	<script type = 'module'>
+		// Handle Sign Out
+		import { signIn } from '../modules/signinandout.js';
+		window.addEventListener('DOMContentLoaded', signIn);
+	</script>
+</body>
+
+</html>
