@@ -177,22 +177,87 @@ function initPaddleOnce() {
 
 			console.log("[Paddle event]", event.name, event.data);
 
+			// Capture email as soon as the user types it in checkout
+			if (event.name === "checkout.customer.updated" || event.name === "checkout.customer.created") {
+				const d = event.data || {};
+				const email = d.customer?.email || null;
+
+				const cd = d.custom_data || d.customData || {};
+				const submissionId = cd.submissionId || window.currentSubmissionId || null;
+
+				if (email) {
+					window.paddleCheckoutEmail = email;
+					console.log("✅ Captured checkout email:", email, "for submissionId:", submissionId);
+				}
+			}
+
 			// ✅ Payment completed successfully
 			if (event.name === "checkout.completed") {
 				const data = event.data;
 
 				// Save payment info for next step
+				const cd = data.custom_data || data.customData || {};
+				const submissionId = cd.submissionId || window.currentSubmissionId || null;
+				const presenterName = cd.presenterName || null;
+
+				const email =
+					(data.customer && (data.customer.email || data.customer.email_address)) ||
+					(data.billing_details && data.billing_details.email) ||
+					(data.user && data.user.email) || data.customer?.email || 
+					window.paddleCheckoutEmail || null;
+
 				window.paddlePayment = {
-					transactionId: data.transaction_id,
-					email: data.customer?.email || null,
-					submissionId: data.custom_data?.submissionId || null,
-					presenterName: data.custom_data?.presenterName || null,
+					transactionId: data.transaction_id || data.transactionId || null,
+					email,
+					submissionId,
+					presenterName,
 				};
 
 				console.log("✅ Payment completed:", window.paddlePayment);
 
 				// Optional UI feedback for now
 				alert("Payment successful! Preparing upload…");
+				// --- MVP: patch email into Firestore (webhook sometimes omits it in sandbox) ---
+				(async () => {
+					try {
+						const cd = data.custom_data || data.customData || {};
+						const submissionId = cd.submissionId || window.currentSubmissionId || null;
+
+						const email =
+							(data.customer && (data.customer.email || data.customer.email_address)) ||
+							(data.billing_details && data.billing_details.email) ||
+							(data.user && data.user.email) || data.customer?.email || 
+							window.paddleCheckoutEmail || null;
+
+						console.log("🔎 Email patch debug:", { submissionId, email, cd });
+
+						if (!submissionId) return;
+						if (!email) return;
+
+						const firebaseConfig = window.firebaseConfig;
+						if (!firebaseConfig) {
+							console.warn("Missing window.firebaseConfig");
+							return;
+						}
+
+						const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+						const { getFirestore, doc, setDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+						const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+						const db = getFirestore(app);
+
+						await setDoc(
+							doc(db, "submissions", submissionId),
+							{ email, emailSource: "frontend", emailUpdatedAt: serverTimestamp() },
+							{ merge: true }
+						);
+
+						console.log("✅ Patched email into Firestore:", email);
+					} catch (e) {
+						console.warn("Email patch failed:", e);
+					}
+				})();
+
 			}
 		},
 	});

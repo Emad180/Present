@@ -45,7 +45,7 @@
 
 					<div class="avatar-placeholder">
 						<p> Make sure to use the audience button on the top-left corner,
-							to simulate audience view and make engaging presentation. 
+							to simulate audience view and make engaging presentation.
 						</p>
 					</div>
 
@@ -55,7 +55,7 @@
 							<span id="recording-timer">0:00</span>
 						</div>
 						<!-- Live oscilloscope -->
- 						<canvas id="voice-scope" width="600" height="80"></canvas>	
+						<canvas id="voice-scope" width="600" height="80"></canvas>
 					</div>
 				</div>
 
@@ -94,17 +94,17 @@
 			<!-- Pricing -->
 			<div class="pricing-box">
 				<div class="pricing-row">
-				<span class="badge">50% OFF today</span>
-				<span class="countdown" id="discount-countdown">--:--:--</span>
+					<span class="badge">50% OFF today</span>
+					<span class="countdown" id="discount-countdown">--:--:--</span>
 				</div>
 
 				<div class="price">
-				<span class="price-was">Was <span id="price-was">$15.90</span></span>
-				<span class="price-now">Now <span id="price-now">$7.95</span></span>
+					<span class="price-was">Was <span id="price-was">$15.90</span></span>
+					<span class="price-now">Now <span id="price-now">$7.95</span></span>
 				</div>
 
 				<div class="pricing-note">
-				You’ll enter your email during payment — please make sure it’s correct.
+					You’ll enter your email during payment — please make sure it’s correct.
 				</div>
 			</div>
 
@@ -113,7 +113,8 @@
 			<input id="customer-name" type="text" placeholder="e.g., Emad Hasabeldaim">
 
 			<!-- Main action -->
-			<button class="btn primary full" id="request-analysis-btn" style="margin-top: 0.8rem;" title="Record your presentation first.">
+			<button class="btn primary full" id="request-analysis-btn" style="margin-top: 0.8rem;"
+				title="Record your presentation first.">
 				Get comprehensive analysis and review
 			</button>
 
@@ -123,7 +124,8 @@
 			<div class="benefits">
 				<h3>What you get</h3>
 				<ul>
-					<li>Slide-to-speech alignment: identify mismatches, missing explanations, and technical clarity gaps</li>
+					<li>Slide-to-speech alignment: identify mismatches, missing explanations, and technical clarity gaps
+					</li>
 					<li>Actionable improvement plan: what to change on slides + what to say differently</li>
 					<li>Speaking delivery review from your audio (pace, pauses, volume, clarity)</li>
 					<li>Summary of your slide timing (including audience-view time)</li>
@@ -139,7 +141,19 @@
 		<video id="audience-video" src="videos/audience-view.mp4" autoplay muted loop></video>
 	</div>
 
+	<script>
+		window.firebaseConfig = {
+			apiKey: "AIzaSyB_sx2RjTZr4__6RaYeUbCDZoWQ2JoJYRo",
+			authDomain: "sci-sim-c6923.firebaseapp.com",
+			projectId: "sci-sim-c6923",
+			storageBucket: "sci-sim-c6923.firebasestorage.app",
+			messagingSenderId: "284031869084",
+			appId: "1:284031869084:web:3c0fa35272f5b96ded4d59"
+		};
+	</script>
+
 	<script type="module" src="js/app.js"></script>
 
 </body>
+
 </html>
