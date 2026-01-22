@@ -292,4 +292,34 @@ exports.getUploadUrls = functions.https.onRequest(async (req, res) => {
     }
 });
 
+exports.createSubmission = functions.https.onRequest(async (req, res) => {
+    try {
+        // CORS
+        res.set("Access-Control-Allow-Origin", "*");
+        res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+        res.set("Access-Control-Allow-Headers", "Content-Type");
+        if (req.method === "OPTIONS") return res.status(204).send("");
+        if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+
+        const { submissionId, presenterName } = req.body || {};
+        if (!submissionId) return res.status(400).send("Missing submissionId");
+
+        await admin.firestore().doc(`submissions/${submissionId}`).set(
+            {
+                submissionId,
+                presenterName: presenterName || null,
+                status: "pending_payment",
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+        );
+
+        return res.status(200).send("ok");
+    } catch (e) {
+        console.error("createSubmission error:", e);
+        return res.status(500).send("error");
+    }
+});
+
+
 

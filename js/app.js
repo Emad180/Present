@@ -62,7 +62,7 @@ function setupPaidReviewButtonGate() {
 	refreshButton();
 
 	// If user clicks when not ready, explain why
-	btn.addEventListener("click", () => {
+	btn.addEventListener("click", async () => {
 		warn.style.display = "none";
 		warn.textContent = "";
 
@@ -86,6 +86,19 @@ function setupPaidReviewButtonGate() {
 
 		// Store submissionId globally for next steps
 		window.currentSubmissionId = submissionId;
+
+		// ✅ Create submission doc in Firestore BEFORE opening checkout
+		try {
+			await fetch("https://us-central1-sci-sim-c6923.cloudfunctions.net/createSubmission", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ submissionId, presenterName }),
+			});
+			console.log("✅ createSubmission called:", submissionId);
+		} catch (e) {
+			console.warn("createSubmission failed (continuing anyway):", e);
+		}
+
 		Paddle.Checkout.open({
 			items: [
 				{
@@ -216,8 +229,8 @@ function initPaddleOnce() {
 
 				// upload slides, audio record, free feedback metric, and presenter name to firebase storage
 				uploadPaidAssetsToStorage({ submissionId, transactionId, presenterName })
-				.then(r => console.log("✅ uploadPaidAssetsToStorage:", r))
-				.catch(e => console.warn("uploadPaidAssetsToStorage error:", e));
+					.then(r => console.log("✅ uploadPaidAssetsToStorage:", r))
+					.catch(e => console.warn("uploadPaidAssetsToStorage error:", e));
 
 
 				console.log("✅ Payment completed:", window.paddlePayment);
