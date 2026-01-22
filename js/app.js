@@ -318,23 +318,53 @@ async function uploadPaidAssetsToStorage({ submissionId, transactionId, presente
 		return { ok: false, reason: "missing_assets" };
 	}
 
-	// 1) Ask backend for signed upload URLs
+	// 1) Ask backend for signed upload URLs (retry because webhook may be delayed)
 	const URLS_ENDPOINT =
 		"https://us-central1-sci-sim-c6923.cloudfunctions.net/getUploadUrls";
 
-	const urlsResp = await fetch(URLS_ENDPOINT, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ submissionId, transactionId, presenterName }),
-	});
+	let urls = null;
+	let lastStatus = null;
+	let lastBody = null;
 
-	const urlsText = await urlsResp.text();
-	if (!urlsResp.ok) {
-		console.warn("getUploadUrls failed:", urlsResp.status, urlsText);
-		return { ok: false, reason: "getUploadUrls_failed", status: urlsResp.status, body: urlsText };
+	for (let attempt = 1; attempt <= 10; attempt++) {
+		const resp = await fetch(URLS_ENDPOINT, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ submissionId, transactionId, presenterName }),
+		});
+
+		const body = await resp.text();
+		lastStatus = resp.status;
+		lastBody = body;
+
+		// Success
+		if (resp.ok) {
+			urls = JSON.parse(body);
+			console.log(`🔗 Signed URLs received (attempt ${attempt})`, {
+				slidesPath: urls.slidesPath,
+				audioPath: urls.audioPath,
+				metricsPath: urls.metricsPath,
+			});
+			break;
+		}
+
+		// Expected race: webhook not written yet
+		if (resp.status === 409 && body.includes("webhook")) {
+			console.log(`⏳ Waiting for webhook... (attempt ${attempt})`);
+			await new Promise(r => setTimeout(r, 1200));
+			continue;
+		}
+
+		// Any other error: stop immediately
+		console.warn("getUploadUrls failed:", resp.status, body);
+		return { ok: false, reason: "getUploadUrls_failed", status: resp.status, body };
 	}
 
-	const urls = JSON.parse(urlsText);
+	if (!urls) {
+		console.warn("getUploadUrls never became ready:", lastStatus, lastBody);
+		return { ok: false, reason: "getUploadUrls_timeout", status: lastStatus, body: lastBody };
+	}
+
 	console.log("🔗 Signed URLs received:", {
 		slidesPath: urls.slidesPath,
 		audioPath: urls.audioPath,
