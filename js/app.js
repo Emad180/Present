@@ -198,6 +198,7 @@ function initPaddleOnce() {
 				// Save payment info for next step
 				const cd = data.custom_data || data.customData || {};
 				const submissionId = cd.submissionId || window.currentSubmissionId || null;
+				const transactionId = data.transaction_id || data.transactionId || null;
 				const presenterName = cd.presenterName || null;
 
 				const email =
