@@ -115,3 +115,69 @@ exports.paddleWebhook = functions.https.onRequest(async (req, res) => {
         return res.status(500).send("error");
     }
 });
+
+/**
+ * Patch submission email from frontend (admin write)
+ * Body: { submissionId, transactionId, email }
+ *
+ * Minimal verification: require transactionId to match the one already stored by paddleWebhook.
+ */
+exports.patchSubmissionEmail = functions.https.onRequest(async (req, res) => {
+    try {
+        // --- CORS (frontend hosted elsewhere, e.g. GitHub) ---
+        res.set("Access-Control-Allow-Origin", "*");
+        res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+        res.set("Access-Control-Allow-Headers", "Content-Type");
+
+        // Preflight request
+        if (req.method === "OPTIONS") {
+            return res.status(204).send("");
+        }
+
+        if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+
+        const { submissionId, transactionId, email } = req.body || {};
+
+        if (!submissionId || !transactionId || !email) {
+            return res.status(400).send("Missing submissionId, transactionId, or email");
+        }
+
+        const docRef = admin.firestore().doc(`submissions/${submissionId}`);
+        const snap = await docRef.get();
+
+        if (!snap.exists) {
+            return res.status(404).send("Submission not found");
+        }
+
+        const data = snap.data() || {};
+        if (!data.transactionId) {
+            return res.status(409).send("Submission missing transactionId (webhook not written yet)");
+        }
+
+        // Minimal safety check: only allow patch if txn matches what webhook stored
+        if (data.transactionId !== transactionId) {
+            return res.status(403).send("transactionId mismatch");
+        }
+
+        // If already set, don’t overwrite (idempotent)
+        if (data.email) {
+            return res.status(200).send("Email already set");
+        }
+
+        await docRef.set(
+            {
+                email,
+                emailMissing: false,
+                emailSource: "frontend_patch",
+                emailPatchedAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+        );
+
+        return res.status(200).send("ok");
+    } catch (err) {
+        console.error("patchSubmissionEmail error:", err);
+        return res.status(500).send("error");
+    }
+});
+

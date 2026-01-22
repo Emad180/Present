@@ -203,7 +203,7 @@ function initPaddleOnce() {
 				const email =
 					(data.customer && (data.customer.email || data.customer.email_address)) ||
 					(data.billing_details && data.billing_details.email) ||
-					(data.user && data.user.email) || data.customer?.email || 
+					(data.user && data.user.email) || data.customer?.email ||
 					window.paddleCheckoutEmail || null;
 
 				window.paddlePayment = {
@@ -217,44 +217,45 @@ function initPaddleOnce() {
 
 				// Optional UI feedback for now
 				alert("Payment successful! Preparing upload…");
-				// --- MVP: patch email into Firestore (webhook sometimes omits it in sandbox) ---
+				// --- Patch email via Cloud Function (reliable; avoids Firestore rule issues) ---
 				(async () => {
 					try {
 						const cd = data.custom_data || data.customData || {};
 						const submissionId = cd.submissionId || window.currentSubmissionId || null;
 
+						const transactionId =
+							data.transaction_id || data.transactionId || null;
+
 						const email =
 							(data.customer && (data.customer.email || data.customer.email_address)) ||
 							(data.billing_details && data.billing_details.email) ||
-							(data.user && data.user.email) || data.customer?.email || 
-							window.paddleCheckoutEmail || null;
+							(data.user && data.user.email) ||
+							data.customer?.email ||
+							window.paddleCheckoutEmail ||
+							null;
 
-						console.log("🔎 Email patch debug:", { submissionId, email, cd });
+						console.log("🔎 Email patch (function) debug:", { submissionId, transactionId, email });
 
-						if (!submissionId) return;
-						if (!email) return;
+						if (!submissionId || !transactionId || !email) return;
 
-						const firebaseConfig = window.firebaseConfig;
-						if (!firebaseConfig) {
-							console.warn("Missing window.firebaseConfig");
+						const PATCH_URL =
+							"https://us-central1-sci-sim-c6923.cloudfunctions.net/patchSubmissionEmail";
+
+						const resp = await fetch(PATCH_URL, {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ submissionId, transactionId, email }),
+						});
+
+						const text = await resp.text();
+						if (!resp.ok) {
+							console.warn("Email patch (function) failed:", resp.status, text);
 							return;
 						}
 
-						const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
-						const { getFirestore, doc, setDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-
-						const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-						const db = getFirestore(app);
-
-						await setDoc(
-							doc(db, "submissions", submissionId),
-							{ email, emailSource: "frontend", emailUpdatedAt: serverTimestamp() },
-							{ merge: true }
-						);
-
-						console.log("✅ Patched email into Firestore:", email);
+						console.log("✅ Email patched via function:", text);
 					} catch (e) {
-						console.warn("Email patch failed:", e);
+						console.warn("Email patch (function) error:", e);
 					}
 				})();
 
