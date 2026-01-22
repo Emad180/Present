@@ -213,6 +213,12 @@ function initPaddleOnce() {
 					presenterName,
 				};
 
+				// upload slides, audio record, free feedback metric, and presenter name to firebase storage
+				uploadPaidAssetsToStorage({ submissionId, transactionId, presenterName })
+				.then(r => console.log("✅ uploadPaidAssetsToStorage:", r))
+				.catch(e => console.warn("uploadPaidAssetsToStorage error:", e));
+
+
 				console.log("✅ Payment completed:", window.paddlePayment);
 
 				// Optional UI feedback for now
@@ -268,3 +274,110 @@ function initPaddleOnce() {
 }
 
 window.addEventListener("DOMContentLoaded", initPaddleOnce);
+
+// Helper function to upload slides, audio record, free feedback metric, and presenter name to firebase storage
+async function uploadPaidAssetsToStorage({ submissionId, transactionId, presenterName }) {
+	// Pull session assets from globals set by your app
+	const slidesFile = window.slidesFile || null;      // set by slide.js
+	const slideTimings = window.slideTimings || null;  // set by slide.js
+	const audioBlob = window.lastAudioBlob || null;    // set by audio recorder
+	const freeAudioMetrics = window.freeAudioMetrics || null;
+
+	console.log("📦 Upload prep:", {
+		submissionId,
+		transactionId,
+		presenterName,
+		hasSlides: !!slidesFile,
+		hasAudio: !!audioBlob,
+		hasMetrics: !!freeAudioMetrics,
+		hasTimings: !!slideTimings,
+	});
+
+	if (!submissionId || !transactionId) {
+		console.warn("Missing submissionId/transactionId; skipping upload.");
+		return { ok: false, reason: "missing_ids" };
+	}
+
+	// require everything (as you requested: slides + audio + full free feedback including timing)
+	if (!slidesFile || !audioBlob || !freeAudioMetrics || !slideTimings) {
+		console.warn("Missing one or more required assets; skipping upload.");
+		return { ok: false, reason: "missing_assets" };
+	}
+
+	// 1) Ask backend for signed upload URLs
+	const URLS_ENDPOINT =
+		"https://us-central1-sci-sim-c6923.cloudfunctions.net/getUploadUrls";
+
+	const urlsResp = await fetch(URLS_ENDPOINT, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ submissionId, transactionId, presenterName }),
+	});
+
+	const urlsText = await urlsResp.text();
+	if (!urlsResp.ok) {
+		console.warn("getUploadUrls failed:", urlsResp.status, urlsText);
+		return { ok: false, reason: "getUploadUrls_failed", status: urlsResp.status, body: urlsText };
+	}
+
+	const urls = JSON.parse(urlsText);
+	console.log("🔗 Signed URLs received:", {
+		slidesPath: urls.slidesPath,
+		audioPath: urls.audioPath,
+		metricsPath: urls.metricsPath,
+	});
+
+	// 2) Upload Slides (PDF)
+	const putSlides = await fetch(urls.slidesUrl, {
+		method: "PUT",
+		headers: { "Content-Type": "application/pdf" },
+		body: slidesFile,
+	});
+
+	// 3) Upload Audio
+	const audioType = audioBlob.type || "audio/webm";
+	const putAudio = await fetch(urls.audioUrl, {
+		method: "PUT",
+		headers: { "Content-Type": audioType },
+		body: audioBlob,
+	});
+
+	// 4) Upload Metrics JSON (free feedback + timings)
+	const payload = {
+		submissionId,
+		transactionId,
+		presenterName,
+		email: window.paddleCheckoutEmail || null,
+		freeAudioMetrics,
+		slideTimings,
+		createdAtClient: new Date().toISOString(),
+	};
+
+	const putMetrics = await fetch(urls.metricsUrl, {
+		method: "PUT",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+
+	console.log("⬆️ Upload results:", {
+		slides: { ok: putSlides.ok, status: putSlides.status },
+		audio: { ok: putAudio.ok, status: putAudio.status },
+		metrics: { ok: putMetrics.ok, status: putMetrics.status },
+	});
+
+	return {
+		ok: putSlides.ok && putAudio.ok && putMetrics.ok,
+		slidesOk: putSlides.ok,
+		audioOk: putAudio.ok,
+		metricsOk: putMetrics.ok,
+		slidesStatus: putSlides.status,
+		audioStatus: putAudio.status,
+		metricsStatus: putMetrics.status,
+		paths: {
+			slidesPath: urls.slidesPath,
+			audioPath: urls.audioPath,
+			metricsPath: urls.metricsPath,
+		},
+	};
+}
+

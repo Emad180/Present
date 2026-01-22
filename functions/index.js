@@ -181,3 +181,115 @@ exports.patchSubmissionEmail = functions.https.onRequest(async (req, res) => {
     }
 });
 
+/**
+ * Returns signed upload URLs for slides/audio/metrics for a PAID submission
+ * Keyed by transactionId and stores presenterName.
+ *
+ * Body: { submissionId, transactionId, presenterName }
+ *
+ * Writes to Firestore:
+ *  - submissions/{submissionId}.presenterName (if provided)
+ *  - submissions/{submissionId}.assets[transactionId] = { slidesPath, audioPath, metricsPath, preparedAt }
+ *
+ * Storage paths:
+ *  submissions/<submissionId>/transactions/<transactionId>/slides.pdf
+ *  submissions/<submissionId>/transactions/<transactionId>/audio.webm
+ *  submissions/<submissionId>/transactions/<transactionId>/metrics.json
+ */
+exports.getUploadUrls = functions.https.onRequest(async (req, res) => {
+    try {
+        // --- CORS (frontend hosted on GitHub) ---
+        res.set("Access-Control-Allow-Origin", "*");
+        res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+        res.set("Access-Control-Allow-Headers", "Content-Type");
+        if (req.method === "OPTIONS") return res.status(204).send("");
+
+        if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+
+        const { submissionId, transactionId, presenterName } = req.body || {};
+        if (!submissionId || !transactionId) {
+            return res.status(400).send("Missing submissionId or transactionId");
+        }
+
+        // Verify submission exists + transactionId matches what webhook stored
+        const docRef = admin.firestore().doc(`submissions/${submissionId}`);
+        const snap = await docRef.get();
+        if (!snap.exists) return res.status(404).send("Submission not found");
+
+        const data = snap.data() || {};
+        if (!data.transactionId) {
+            return res.status(409).send("Submission missing transactionId (webhook not written yet)");
+        }
+        if (data.transactionId !== transactionId) {
+            return res.status(403).send("transactionId mismatch");
+        }
+
+        // Store presenterName (optional, but you wanted it saved)
+        if (presenterName && presenterName.trim().length > 0) {
+            await docRef.set({ presenterName: presenterName.trim() }, { merge: true });
+        }
+
+        // Signed URL uploads
+        const bucket = admin.storage().bucket();
+
+        const base = `submissions/${submissionId}/transactions/${transactionId}`;
+        const slidesPath = `${base}/slides.pdf`;
+        const audioPath = `${base}/audio.webm`;
+        const metricsPath = `${base}/metrics.json`;
+
+        // 15-minute window is usually enough for uploading
+        const expires = Date.now() + 15 * 60 * 1000;
+
+        const [slidesUrl] = await bucket.file(slidesPath).getSignedUrl({
+            version: "v4",
+            action: "write",
+            expires,
+            contentType: "application/pdf",
+        });
+
+        const [audioUrl] = await bucket.file(audioPath).getSignedUrl({
+            version: "v4",
+            action: "write",
+            expires,
+            contentType: "audio/webm",
+        });
+
+        const [metricsUrl] = await bucket.file(metricsPath).getSignedUrl({
+            version: "v4",
+            action: "write",
+            expires,
+            contentType: "application/json",
+        });
+
+        // Store paths in Firestore for later retrieval/debug
+        await docRef.set(
+            {
+                assets: {
+                    [transactionId]: {
+                        slidesPath,
+                        audioPath,
+                        metricsPath,
+                        preparedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    },
+                },
+            },
+            { merge: true }
+        );
+
+        return res.status(200).json({
+            submissionId,
+            transactionId,
+            slidesUrl,
+            audioUrl,
+            metricsUrl,
+            slidesPath,
+            audioPath,
+            metricsPath,
+        });
+    } catch (err) {
+        console.error("getUploadUrls error:", err);
+        return res.status(500).send("error");
+    }
+});
+
+
