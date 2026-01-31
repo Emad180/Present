@@ -85,16 +85,19 @@ body {
   gap: 1rem;
 }
 
-.hero-image {
-  flex: 1 1 45%;
-  text-align: center;
+.hero-image{
+  position: relative;
+  width: 50%; 
+  border-radius: 18px;      /* optional: match your card radius */
+  overflow: hidden;         /* keeps rounded corners */
 }
 
-.hero-image img {
+/* show video, hide placeholder */
+.hero-image iframe{
+  display: block;
   width: 100%;
-  max-width: 480px;
-  border-radius: 1rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  aspect-ratio: 16 / 9;     /* responsive YouTube size */
+  border: 0;
 }
 
 /* ===== BUTTONS ===== */
@@ -253,5 +256,8 @@ footer {
   }
   .hero-buttons {
     justify-content: center;
+  }
+  .hero-image{
+    width: 90%;
   }
 }
