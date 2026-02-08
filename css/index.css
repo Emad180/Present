@@ -202,10 +202,12 @@ body {
 footer {
   text-align: center;
   border-top: 2px solid var(--accent);
-  padding: 2rem 1rem;
+  padding: 1.5rem 0.9rem;
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--muted); line-height: 0.7rem;
 }
+
+footer a { color: var(--muted)}
 
 /* ===== MODAL (SIGN IN) ===== */
 .modal {
