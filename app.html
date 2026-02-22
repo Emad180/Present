@@ -71,11 +71,12 @@
 
 					<div class="avatar-audio">
 						<div class="audio-row">
-							<audio id="audio-playback" controls></audio>
+							<div class="audio-stack">
+								<audio id="audio-playback" controls controlsList="nodownload"></audio>
+								<canvas id="voice-scope" width="600" height="80"></canvas>
+							</div>
 							<span id="recording-timer">0:00</span>
 						</div>
-						<!-- Live oscilloscope -->
-						<canvas id="voice-scope" width="600" height="80"></canvas>
 					</div>
 				</div>
 
