@@ -102,7 +102,7 @@ function setupPaidReviewButtonGate() {
 		Paddle.Checkout.open({
 			items: [
 				{
-					priceId: "pri_01kfc3z3h0n7fz0txwegeftp03",
+					priceId: "pri_01kf8xvxptdgbpb2p8z8d1s3vf",
 					quantity: 1
 				}
 			],
@@ -167,8 +167,8 @@ window.addEventListener("beforeunload", (e) => {
 
 // ===== Paddle init (Step 1) =====
 // Replace these with your real values
-const PADDLE_CLIENT_TOKEN = "test_e800c2a022b5166a68bee7fdacd"; // or live_xxx
-const PADDLE_ENV = "sandbox"; // "sandbox" for testing, "production" for live
+const PADDLE_CLIENT_TOKEN = "live_b9f8b37c3fe679507e0a1fa1c70"; // or live_xxx
+const PADDLE_ENV = "production"; // "sandbox" for testing, "production" for live
 // NOTE: For live, remove Environment.set (Paddle defaults to production). :contentReference[oaicite:1]{index=1}
 
 function initPaddleOnce() {
