@@ -425,3 +425,25 @@ async function uploadPaidAssetsToStorage({ submissionId, transactionId, presente
 	};
 }
 
+// Click the Welcome + Quick tips button and speak
+const welcomeBtn = document.getElementById("welcome-btn");
+const noteText =
+  "Welcome in! Tap Audience (top-left) to rehearse with a realistic audience view. After you finish, click View Feedback to check your timing and speaking metrics.";
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) return; // no support
+
+  // Stop any previous speech
+  window.speechSynthesis.cancel();
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1;   // 0.1 - 10
+  utter.pitch = 1;  // 0 - 2
+  utter.volume = 1; // 0 - 1
+
+  window.speechSynthesis.speak(utter);
+}
+
+if (welcomeBtn) {
+  welcomeBtn.addEventListener("click", () => speak(noteText));
+}
